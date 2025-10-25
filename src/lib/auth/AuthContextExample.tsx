@@ -8,27 +8,28 @@
 import React from "react";
 import { useAuthContext } from "./AuthContext";
 import { LoginData, SignupData } from "./types/authTypes";
+import { AuthenticatedFetchOptions, AxiosResponse } from "./types/axiosTypes";
 
 // Example component showing proper usage of AuthContext
 export function AuthExampleComponent() {
-  const { 
-    user, 
-    isAuthenticated, 
-    isLoading, 
-    login, 
-    signup, 
-    logout, 
-    getAuthHeaders, 
-    fetchWithAuth 
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    signup,
+    logout,
+    getAuthHeaders,
+    fetchWithAuth,
   } = useAuthContext();
 
   // Example login handler with proper typing
   const handleLogin = async () => {
     const loginData: LoginData = {
       email: "user@example.com",
-      password: "password123"
+      password: "password123",
     };
-    
+
     try {
       // login method expects LoginData object, returns Promise<AuthResponse>
       const authResponse = await login(loginData);
@@ -44,9 +45,9 @@ export function AuthExampleComponent() {
       email: "newuser@example.com",
       username: "newuser",
       full_name: "New User",
-      password: "password123"
+      password: "password123",
     };
-    
+
     try {
       // signup method expects SignupData object, returns Promise<SignupResponse>
       const signupResponse = await signup(signupData);
@@ -77,10 +78,10 @@ export function AuthExampleComponent() {
       const response = await fetchWithAuth("/api/protected-data", {
         method: "GET",
         headers: {
-          "Custom-Header": "value"
-        }
+          "Custom-Header": "value",
+        },
       });
-      
+
       console.log("Response data:", response.data);
       console.log("Response status:", response.status);
     } catch (error) {
@@ -107,7 +108,7 @@ export function AuthExampleComponent() {
       <h1>Welcome, {user?.username}!</h1>
       <p>Email: {user?.email}</p>
       <p>Full Name: {user?.full_name}</p>
-      
+
       <button onClick={handleGetHeaders}>Get Auth Headers</button>
       <button onClick={handleFetchData}>Fetch Protected Data</button>
       <button onClick={handleLogout}>Logout</button>
@@ -130,16 +131,16 @@ export class AuthService {
 
   // Type-safe signup method
   async signupUser(
-    email: string, 
-    username: string, 
-    fullName: string, 
+    email: string,
+    username: string,
+    fullName: string,
     password: string
   ) {
-    const signupData: SignupData = { 
-      email, 
-      username, 
-      full_name: fullName, 
-      password 
+    const signupData: SignupData = {
+      email,
+      username,
+      full_name: fullName,
+      password,
     };
     return await this.authContext.signup(signupData);
   }
@@ -150,18 +151,13 @@ export class AuthService {
   }
 
   // Type-safe authenticated fetch
-  async fetchProtectedData<T = any>(url: string, options?: {
-    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-    body?: unknown;
-    data?: unknown;
-    headers?: Record<string, string>;
-  }) {
-    return await this.authContext.fetchWithAuth(url, options) as {
-      data: T;
-      status: number;
-      statusText: string;
-      headers: Record<string, string>;
-      config: any;
-    };
+  async fetchProtectedData<T = unknown>(
+    url: string,
+    options?: AuthenticatedFetchOptions
+  ) {
+    return (await this.authContext.fetchWithAuth(
+      url,
+      options
+    )) as AxiosResponse<T>;
   }
 }

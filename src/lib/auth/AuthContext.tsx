@@ -2,36 +2,29 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
 import useAuth from "./useAuth";
-import { AuthState, AuthResponse, SignupResponse, LoginData, SignupData } from "./types/authTypes";
-
-// Define proper types for fetchWithAuth options to avoid 'any'
-type FetchOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  body?: unknown;
-  data?: unknown;
-  headers?: Record<string, string>;
-};
-
-// Define the return type for fetchWithAuth (Axios response)
-type AxiosResponse<T = any> = {
-  data: T;
-  status: number;
-  statusText: string;
-  headers: Record<string, string>;
-  config: any;
-};
+import {
+  AuthState,
+  AuthResponse,
+  SignupResponse,
+  LoginData,
+  SignupData,
+} from "./types/authTypes";
+import { AxiosResponse, AuthenticatedFetchOptions } from "./types/axiosTypes";
 
 interface AuthContextType extends AuthState {
   // Login method takes LoginData object and returns AuthResponse
   login: (data: LoginData) => Promise<AuthResponse>;
-  // Signup method takes SignupData object and returns SignupResponse  
+  // Signup method takes SignupData object and returns SignupResponse
   signup: (data: SignupData) => Promise<SignupResponse>;
   // Logout method takes optional redirect path and returns the path
   logout: (redirectPath?: string) => string;
-  // Get auth headers returns a record of string key-value pairs
-  getAuthHeaders: () => Record<string, string>;
+  // Get auth headers returns a record of string key-value pairs (Authorization may be undefined)
+  getAuthHeaders: () => Record<string, string | undefined>;
   // Fetch with auth takes URL and options, returns Axios response
-  fetchWithAuth: (url: string, options?: FetchOptions) => Promise<AxiosResponse>;
+  fetchWithAuth: (
+    url: string,
+    options?: AuthenticatedFetchOptions
+  ) => Promise<AxiosResponse>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
