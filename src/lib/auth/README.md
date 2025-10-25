@@ -30,13 +30,21 @@ export default function RootLayout({
 
 ```tsx
 import { useAuthContext } from "@/lib/auth";
+import { LoginData } from "@/lib/auth/types/authTypes";
 
 export default function MyComponent() {
   const { user, isAuthenticated, logout, login } = useAuthContext();
 
   const handleLogin = async () => {
+    // Correct usage: login expects LoginData object
+    const loginData: LoginData = {
+      email: "user@example.com", 
+      password: "password"
+    };
+    
     try {
-      await login({ email: "user@example.com", password: "password" });
+      const authResponse = await login(loginData);
+      console.log("Login successful:", authResponse.user);
     } catch (error) {
       console.error("Login failed:", error);
     }
@@ -139,13 +147,13 @@ export default withAuthGuard(MyComponent, { requireAuth: true });
 
 ## AuthContext Methods
 
-| Method           | Parameters                            | Description                    |
-| ---------------- | ------------------------------------- | ------------------------------ |
-| `login`          | `{ email: string, password: string }` | Log in with email and password |
-| `signup`         | `SignupData`                          | Create a new user account      |
-| `logout`         | `redirectPath?: string`               | Log out the current user       |
-| `getAuthHeaders` | -                                     | Get authentication headers     |
-| `fetchWithAuth`  | `url: string, options?: any`          | Make authenticated requests    |
+| Method           | Parameters                            | Return Type                    | Description                    |
+| ---------------- | ------------------------------------- | ------------------------------ | ------------------------------ |
+| `login`          | `LoginData`                           | `Promise<AuthResponse>`        | Log in with email and password |
+| `signup`         | `SignupData`                          | `Promise<SignupResponse>`      | Create a new user account      |
+| `logout`         | `redirectPath?: string`               | `string`                       | Log out the current user       |
+| `getAuthHeaders` | -                                     | `Record<string, string>`       | Get authentication headers     |
+| `fetchWithAuth`  | `url: string, options?: FetchOptions` | `Promise<AxiosResponse>`       | Make authenticated requests    |
 
 ## AuthContext State
 
