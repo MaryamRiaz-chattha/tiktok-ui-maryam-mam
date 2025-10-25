@@ -285,7 +285,7 @@ export default function useAuth() {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
     body?: unknown
     data?: unknown
-    headers?: Record<string, string>
+    headers?: Record<string, string | undefined>
   }
 
   const fetchWithAuth = useCallback(async (url: string, options: FetchOptions = {}) => {

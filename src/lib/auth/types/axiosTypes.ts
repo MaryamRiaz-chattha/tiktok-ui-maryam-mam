@@ -66,5 +66,5 @@ export interface AuthenticatedFetchOptions {
 // Generic request/response types
 export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 export type ResponseData<T = unknown> = T;
-export type RequestHeaders = Record<string, string>;
+export type RequestHeaders = Record<string, string | undefined>;
 export type RequestParams = Record<string, unknown>;
