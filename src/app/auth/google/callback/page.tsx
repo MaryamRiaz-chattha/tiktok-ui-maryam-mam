@@ -41,9 +41,11 @@ export default function GoogleCallbackPage() {
         setTimeout(() => {
           router.push("/auth/connect");
         }, 2000);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setStatus("error");
-        setMessage(err.message || "Authentication failed");
+        const errorMessage =
+          err instanceof Error ? err.message : "Authentication failed";
+        setMessage(errorMessage);
       }
     };
 

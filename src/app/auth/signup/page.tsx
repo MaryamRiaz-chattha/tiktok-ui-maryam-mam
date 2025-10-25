@@ -72,16 +72,22 @@ export default function SignupPage() {
       setTimeout(() => {
         router.push("/auth/connect");
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || "Signup failed. Please try again.");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Signup failed. Please try again.";
+      setError(errorMessage);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
       await initiateGoogleLogin();
-    } catch (err: any) {
-      setError(err.message || "Google login failed. Please try again.");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Google login failed. Please try again.";
+      setError(errorMessage);
     }
   };
 

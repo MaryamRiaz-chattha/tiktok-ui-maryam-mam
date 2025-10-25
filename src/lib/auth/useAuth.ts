@@ -6,7 +6,6 @@ import {
   removeSessionId,
   setActiveUserId,
   removeActiveUserId,
-  hasSessionConflict,
   validateSession,
   getSessionId,
   getActiveUserId
@@ -17,7 +16,7 @@ import {
 import { api } from './authApi'
 import { DEBUG_LOGS } from '@/lib/config/appConfig'
 import { STORAGE_KEYS } from './authConstants'
-import type { User, AuthState, SignupData, LoginData, AuthResponse, SignupResponse } from './types/authTypes'
+import type { SignupData, LoginData, AuthResponse, SignupResponse } from './types/authTypes'
 import { authReducer, initialAuthState } from './Reducers/authReducer'
 
 export default function useAuth() {
@@ -63,7 +62,7 @@ export default function useAuth() {
       if (DEBUG_LOGS) console.log('ℹ️ No auth data found, setting as unauthenticated')
       dispatch({ type: 'INIT', payload: { user: null, token: null } })
     }
-  }, [])
+  }, [logout])
 
   const signup = useCallback(async (data: SignupData): Promise<SignupResponse> => {
     if (DEBUG_LOGS) console.log('📝 Starting signup process with data:', { ...data, password: '[REDACTED]' })
@@ -87,7 +86,7 @@ export default function useAuth() {
       console.log('💾 Saved user ID to localStorage:', response.data.id)
       
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (DEBUG_LOGS) console.error('❌ Signup failed:', error)
       
       if (axios.isAxiosError(error)) {
@@ -179,13 +178,13 @@ export default function useAuth() {
             localStorage.removeItem(STORAGE_KEYS.GEMINI_API_KEY_PREVIEW)
             if (DEBUG_LOGS) console.log('ℹ️ No Gemini key found (null)')
           }
-        } catch (e) {
+        } catch {
           if (DEBUG_LOGS) console.warn('⚠️ Gemini key fetch failed (ignored)')
         }
       })()
       
       return response.data
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (DEBUG_LOGS) console.error('❌ Login failed:', error)
       
       if (axios.isAxiosError(error)) {
@@ -265,7 +264,7 @@ export default function useAuth() {
     return headers
   }, [])
 
-  const fetchWithAuth = useCallback(async (url: string, options: any = {}) => {
+  const fetchWithAuth = useCallback(async (url: string, options: Record<string, unknown> = {}) => {
     if (DEBUG_LOGS) console.log('🌐 Making authenticated request to:', url)
     
     const authHeaders = getAuthHeaders()
@@ -287,7 +286,7 @@ export default function useAuth() {
       })
       
       return response
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (DEBUG_LOGS) console.error('❌ Authenticated request failed:', error)
       
       if (axios.isAxiosError(error) && error.response?.status === 401) {

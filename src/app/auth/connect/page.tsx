@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth";
 export default function ConnectPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Redirect to login if not authenticated
   useEffect(() => {
