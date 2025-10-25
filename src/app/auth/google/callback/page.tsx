@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGoogleAuth } from "@/lib/auth";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -15,94 +15,61 @@ export default function GoogleCallbackPage() {
   const { handleGoogleCallback } = useGoogleAuth();
 
   useEffect(() => {
-    const handleCallback = async () => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state") || "";
+
+    if (!code) {
+      setStatus("error");
+      setMessage("Authorization code missing.");
+      return;
+    }
+
+    const completeGoogleLogin = async () => {
       try {
-        const code = searchParams.get("code");
-        const error = searchParams.get("error");
-        const state = searchParams.get("state");
-
-        if (error) {
-          setStatus("error");
-          setMessage(`Google OAuth error: ${error}`);
-          return;
-        }
-
-        if (!code) {
-          setStatus("error");
-          setMessage("No authorization code received");
-          return;
-        }
-
-        await handleGoogleCallback(code, state || undefined);
+        await handleGoogleCallback(code, state);
         setStatus("success");
-        setMessage("Successfully authenticated with Google!");
-
-        // Redirect after a short delay
-        setTimeout(() => {
-          router.push("/auth/connect");
-        }, 2000);
-      } catch (err: unknown) {
+        setMessage("Login successful! Redirecting...");
+        setTimeout(() => router.push("/dashboard"), 1500);
+      } catch (err) {
+        console.error(err);
         setStatus("error");
-        const errorMessage =
-          err instanceof Error ? err.message : "Authentication failed";
-        setMessage(errorMessage);
+        setMessage("Failed to complete Google login.");
       }
     };
 
-    handleCallback();
-  }, [searchParams, handleGoogleCallback, router]);
+    completeGoogleLogin();
+  }, [searchParams, router, handleGoogleCallback]);
 
   return (
     <div className="min-h-screen bg-[#0A012A] flex items-center justify-center">
-      <div className="bg-[#1A103D]/30 backdrop-blur-sm border-0 shadow-2xl shadow-[#6C63FF]/50 rounded-2xl p-8 max-w-md mx-4 text-center">
+      <div className="text-center text-white space-y-4">
         {status === "loading" && (
           <>
-            <div className="w-16 h-16 bg-gradient-to-r from-[#6C63FF] to-[#FF2E97] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Loader2 className="h-8 w-8 text-white animate-spin" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Authenticating...
-            </h3>
-            <p className="text-[#C5C5D2]">
-              Please wait while we verify your Google account
-            </p>
+            <Loader2 className="animate-spin w-10 h-10 mx-auto" />
+            <p>Completing Google Login...</p>
           </>
         )}
-
         {status === "success" && (
           <>
-            <div className="w-16 h-16 bg-gradient-to-r from-[#6C63FF] to-[#FF2E97] rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Success!</h3>
-            <p className="text-[#C5C5D2] mb-4">{message}</p>
-            <div className="w-full bg-[#2A1A4D] rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-[#6C63FF] to-[#FF2E97] h-2 rounded-full animate-pulse"
-                style={{ width: "100%" }}
-              ></div>
-            </div>
+            <CheckCircle className="text-green-500 w-10 h-10 mx-auto" />
+            <p>{message}</p>
           </>
         )}
-
         {status === "error" && (
           <>
-            <div className="w-16 h-16 bg-gradient-to-r from-[#FF2E97] to-[#FF2E97] rounded-full flex items-center justify-center mx-auto mb-4">
-              <XCircle className="h-8 w-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Authentication Failed
-            </h3>
-            <p className="text-[#C5C5D2] mb-4">{message}</p>
-            <button
-              onClick={() => router.push("/auth/login")}
-              className="bg-gradient-to-r from-[#6C63FF] to-[#FF2E97] hover:from-[#5A52E6] hover:to-[#E61E87] text-white font-semibold py-2 px-6 rounded-xl transition-all duration-300"
-            >
-              Try Again
-            </button>
+            <XCircle className="text-red-500 w-10 h-10 mx-auto" />
+            <p>{message}</p>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={<div className="text-white text-center mt-20">Loading callback...</div>}>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }

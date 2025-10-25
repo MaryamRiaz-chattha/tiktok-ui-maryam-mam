@@ -1,7 +1,3 @@
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
-import Link from "next/link"
 import Image from "next/image"
 
 export function HeroWithImage() {
@@ -23,7 +19,7 @@ export function HeroWithImage() {
                 Unlock TikTok growth with AI-powered automation. Plan, create, and schedule viral videos effortlessly. Boost engagement and expand your reach.
               </span>
               <span className="hidden lg:block">
-                Unlock the easiest way to grow your TikTok profile with advanced, AI-powered automation. Effortlessly plan, create, and schedule viral-worthy videos—our tools help you boost engagement, analyze trends, and expand your reach without the manual grind. Whether you're a creator or a brand, let smart automation handle the tedious work, so you can focus on what matters most: building your unique presence and connecting with your audience.
+                Unlock the easiest way to grow your TikTok profile with advanced, AI-powered automation. Effortlessly plan, create, and schedule viral-worthy videos—our tools help you boost engagement, analyze trends, and expand your reach without the manual grind. Whether you&apos;re a creator or a brand, let smart automation handle the tedious work, so you can focus on what matters most: building your unique presence and connecting with your audience.
               </span>
             </p>
           </div>

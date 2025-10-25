@@ -146,6 +146,21 @@ export default function useAuth() {
     }
   }, [])
 
+  const getAuthHeaders = useCallback(() => {
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+    const headers = token
+      ? {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      : {
+          'Content-Type': 'application/json',
+        }
+    
+    if (DEBUG_LOGS) console.log('🔑 Generated auth headers:', { hasToken: !!token, headers })
+    return headers
+  }, [])
+
   const login = useCallback(async (data: LoginData): Promise<AuthResponse> => {
     if (DEBUG_LOGS) console.log('🔐 Starting login process with email:', data.email)
     
@@ -206,20 +221,37 @@ export default function useAuth() {
       // Quietly fetch and cache Gemini API key (non-blocking, ignore errors)
       ;(async () => {
         try {
+          type GeminiKeyData = { api_key_preview?: string | null; is_active?: boolean | null } | null
+          const isGeminiKeyData = (val: unknown): val is Exclude<GeminiKeyData, null> => {
+            if (!val || typeof val !== 'object') return false
+            const maybe = val as Record<string, unknown>
+            const apk = maybe.api_key_preview
+            const active = maybe.is_active
+            const apkOk = apk === null || typeof apk === 'string' || typeof apk === 'undefined'
+            const activeOk = active === null || typeof active === 'boolean' || typeof active === 'undefined'
+            return apkOk && activeOk
+          }
+
           const headers = getAuthHeaders()
           const res = await api.get('/gemini-keys/', { headers })
-          const data = res?.data as any
-          if (data) {
-            if (data.api_key_preview) {
-              localStorage.setItem(STORAGE_KEYS.GEMINI_API_KEY_PREVIEW, String(data.api_key_preview))
+          const raw = res?.data as unknown
+
+          if (isGeminiKeyData(raw)) {
+            const api_key_preview = raw?.api_key_preview ?? null
+            const is_active = raw?.is_active ?? null
+            if (api_key_preview) {
+              localStorage.setItem(STORAGE_KEYS.GEMINI_API_KEY_PREVIEW, String(api_key_preview))
             }
-            localStorage.setItem(STORAGE_KEYS.HAS_GEMINI_KEY, String(!!(data.api_key_preview || data.is_active)))
+            localStorage.setItem(
+              STORAGE_KEYS.HAS_GEMINI_KEY,
+              String(!!(api_key_preview || is_active))
+            )
             if (DEBUG_LOGS) console.log('🔑 Cached Gemini key presence from server')
           } else {
-            // Explicitly clear presence when API returns null
+            // Explicitly clear presence when API returns null or invalid
             localStorage.setItem(STORAGE_KEYS.HAS_GEMINI_KEY, 'false')
             localStorage.removeItem(STORAGE_KEYS.GEMINI_API_KEY_PREVIEW)
-            if (DEBUG_LOGS) console.log('ℹ️ No Gemini key found (null)')
+            if (DEBUG_LOGS) console.log('ℹ️ No Gemini key found (null/invalid)')
           }
         } catch {
           if (DEBUG_LOGS) console.warn('⚠️ Gemini key fetch failed (ignored)')
@@ -247,24 +279,16 @@ export default function useAuth() {
         throw new Error('Network error. Please check your connection and try again.')
       }
     }
-  }, [])
+  }, [getAuthHeaders])
 
-  const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
-    const headers = token
-      ? {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      : {
-          'Content-Type': 'application/json',
-        }
-    
-    if (DEBUG_LOGS) console.log('🔑 Generated auth headers:', { hasToken: !!token, headers })
-    return headers
-  }, [])
+  type FetchOptions = {
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+    body?: unknown
+    data?: unknown
+    headers?: Record<string, string>
+  }
 
-  const fetchWithAuth = useCallback(async (url: string, options: Record<string, unknown> = {}) => {
+  const fetchWithAuth = useCallback(async (url: string, options: FetchOptions = {}) => {
     if (DEBUG_LOGS) console.log('🌐 Making authenticated request to:', url)
     
     const authHeaders = getAuthHeaders()
@@ -272,11 +296,11 @@ export default function useAuth() {
     try {
       const response = await axios({
         url,
-        method: options.method || 'GET',
-        data: options.body || options.data,
+        method: options.method ?? 'GET',
+        data: options.body ?? options.data,
         headers: {
           ...authHeaders,
-          ...options.headers,
+          ...(options.headers ?? {}),
         },
       })
       
