@@ -22,6 +22,49 @@ import { authReducer, initialAuthState } from './Reducers/authReducer'
 export default function useAuth() {
   const [authState, dispatch] = useReducer(authReducer, initialAuthState)
 
+  const logout = useCallback((redirectPath: string = '/auth/login') => {
+    console.log('🔒 Starting logout process...')
+    
+    // Clear all storage items
+    const itemsToRemove = [
+      STORAGE_KEYS.AUTH_TOKEN,
+      STORAGE_KEYS.USER_DATA,
+      STORAGE_KEYS.SESSION_ID,
+      STORAGE_KEYS.ACTIVE_USER_ID,
+      'user_id',
+    ]
+    
+    itemsToRemove.forEach(item => {
+      localStorage.removeItem(item)
+    })
+    
+    // Also clear any other localStorage items that might be app-related
+    // This is a more thorough cleanup
+    const allKeys = Object.keys(localStorage)
+    allKeys.forEach(key => {
+      // Remove any keys that might be related to our app
+      if (key.includes('auth') || 
+          key.includes('user') || 
+          key.includes('token') || 
+          key.includes('video') || 
+          key.includes('youtube') || 
+          key.includes('gemini') ||
+          key.includes('credential') ||
+          key.includes('session')) {
+        localStorage.removeItem(key)
+      }
+    })
+    
+    console.log('✅ Cleared all session and auth data')
+    
+    // Reset auth state
+    dispatch({ type: 'LOGOUT' })
+    
+    // Return the redirect path so the caller can handle navigation
+    // This allows using Next.js router instead of window.location
+    return redirectPath
+  }, [])
+
   // Initialize auth state from localStorage with session validation
   useEffect(() => {
     if (DEBUG_LOGS) console.log('🔄 Initializing auth state from localStorage...')
@@ -204,49 +247,6 @@ export default function useAuth() {
         throw new Error('Network error. Please check your connection and try again.')
       }
     }
-  }, [])
-
-    const logout = useCallback((redirectPath: string = '/auth/login') => {
-    console.log('� Starting logout process...')
-    
-    // Clear all storage items
-    const itemsToRemove = [
-      STORAGE_KEYS.AUTH_TOKEN,
-      STORAGE_KEYS.USER_DATA,
-      STORAGE_KEYS.SESSION_ID,
-      STORAGE_KEYS.ACTIVE_USER_ID,
-      'user_id',
-    ]
-    
-    itemsToRemove.forEach(item => {
-      localStorage.removeItem(item)
-    })
-    
-    // Also clear any other localStorage items that might be app-related
-    // This is a more thorough cleanup
-    const allKeys = Object.keys(localStorage)
-    allKeys.forEach(key => {
-      // Remove any keys that might be related to our app
-      if (key.includes('auth') || 
-          key.includes('user') || 
-          key.includes('token') || 
-          key.includes('video') || 
-          key.includes('youtube') || 
-          key.includes('gemini') ||
-          key.includes('credential') ||
-          key.includes('session')) {
-        localStorage.removeItem(key)
-      }
-    })
-    
-    console.log('✅ Cleared all session and auth data')
-    
-    // Reset auth state
-    dispatch({ type: 'LOGOUT' })
-    
-    // Return the redirect path so the caller can handle navigation
-    // This allows using Next.js router instead of window.location
-    return redirectPath
   }, [])
 
   const getAuthHeaders = useCallback(() => {
