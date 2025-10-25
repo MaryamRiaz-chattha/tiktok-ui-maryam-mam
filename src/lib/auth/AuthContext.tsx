@@ -2,18 +2,19 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
 import useAuth from "./useAuth";
-import { AuthState } from "./types/authTypes";
+import { AuthState, AuthResponse, SignupResponse } from "./types/authTypes";
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (data: { email: string; password: string }) => Promise<AuthResponse>;
   signup: (data: {
     email: string;
     username: string;
     full_name: string;
     password: string;
-  }) => Promise<void>;
+  }) => Promise<SignupResponse>;
   logout: (redirectPath?: string) => void;
-  refreshToken: () => Promise<void>;
+  getAuthHeaders: () => Record<string, string>;
+  fetchWithAuth: (url: string, options?: any) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +34,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login: auth.login,
     signup: auth.signup,
     logout: auth.logout,
-    refreshToken: auth.refreshToken,
+    getAuthHeaders: auth.getAuthHeaders,
+    fetchWithAuth: auth.fetchWithAuth,
   };
 
   return (

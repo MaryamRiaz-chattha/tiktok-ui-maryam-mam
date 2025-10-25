@@ -32,10 +32,23 @@ export default function RootLayout({
 import { useAuthContext } from "@/lib/auth";
 
 export default function MyComponent() {
-  const { user, isAuthenticated, logout } = useAuthContext();
+  const { user, isAuthenticated, logout, login } = useAuthContext();
+
+  const handleLogin = async () => {
+    try {
+      await login({ email: "user@example.com", password: "password" });
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
 
   if (!isAuthenticated) {
-    return <div>Please log in</div>;
+    return (
+      <div>
+        <h1>Please log in</h1>
+        <button onClick={handleLogin}>Login</button>
+      </div>
+    );
   }
 
   return (
@@ -126,12 +139,13 @@ export default withAuthGuard(MyComponent, { requireAuth: true });
 
 ## AuthContext Methods
 
-| Method         | Parameters                        | Description                      |
-| -------------- | --------------------------------- | -------------------------------- |
-| `login`        | `email: string, password: string` | Log in with email and password   |
-| `signup`       | `SignupData`                      | Create a new user account        |
-| `logout`       | `redirectPath?: string`           | Log out the current user         |
-| `refreshToken` | -                                 | Refresh the authentication token |
+| Method           | Parameters                            | Description                    |
+| ---------------- | ------------------------------------- | ------------------------------ |
+| `login`          | `{ email: string, password: string }` | Log in with email and password |
+| `signup`         | `SignupData`                          | Create a new user account      |
+| `logout`         | `redirectPath?: string`               | Log out the current user       |
+| `getAuthHeaders` | -                                     | Get authentication headers     |
+| `fetchWithAuth`  | `url: string, options?: any`          | Make authenticated requests    |
 
 ## AuthContext State
 
