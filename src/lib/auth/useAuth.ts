@@ -17,7 +17,7 @@ import { api } from './authApi'
 import { DEBUG_LOGS } from '@/lib/config/appConfig'
 import { STORAGE_KEYS } from './authConstants'
 import type { SignupData, LoginData, AuthResponse, SignupResponse } from './types/authTypes'
-import type { AxiosResponse, AuthenticatedFetchOptions } from './types/axiosTypes'
+import type { AxiosResponse, AuthenticatedFetchOptions, AxiosRequestConfig } from './types/axiosTypes'
 import { authReducer, initialAuthState } from './Reducers/authReducer'
 
 export default function useAuth() {
@@ -312,12 +312,22 @@ export default function useAuth() {
         url,
       })
       
+      // Normalize Axios response.config to our local AxiosRequestConfig type
+      // Axios internal types may widen `method` to `string | undefined` which
+      // conflicts with our stricter union type. Coerce and narrow safely here.
+      const normalizedConfig: AxiosRequestConfig = {
+        ...(response.config as unknown as AxiosRequestConfig),
+        method: response.config?.method
+          ? String(response.config.method).toUpperCase() as AxiosRequestConfig['method']
+          : undefined,
+      }
+
       const customResponse: AxiosResponse<unknown> = {
         data: response.data as unknown,
         status: response.status,
         statusText: response.statusText,
         headers: response.headers as Record<string, string>,
-        config: response.config,
+        config: normalizedConfig,
         request: response.request
       }
       return customResponse

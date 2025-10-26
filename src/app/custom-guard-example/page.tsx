@@ -4,6 +4,8 @@ import { AuthGuard } from "@/lib/auth";
 import { useAuthContext } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 export default function CustomGuardExamplePage() {
   const { user, logout } = useAuthContext();
 
