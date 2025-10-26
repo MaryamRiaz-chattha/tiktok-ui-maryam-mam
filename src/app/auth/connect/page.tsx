@@ -6,13 +6,18 @@ import { Header } from "@/components/Home-Content/Header";
 import { Footer } from "@/components/Home-Content/Footer";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import useTikTokAuth from "@/lib/auth/useTiktokAuth";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 
 export default function ConnectPage() {
-  const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const {
+    isLoading: isConnecting,
+    error: tiktokError,
+    initiateTikTokConnect,
+  } = useTikTokAuth();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -20,13 +25,6 @@ export default function ConnectPage() {
       router.push("/auth/login");
     }
   }, [isAuthenticated, isLoading, router]);
-
-  const handleConnectTikTok = () => {
-    setIsConnecting(true);
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 3000);
-  };
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -78,7 +76,7 @@ export default function ConnectPage() {
 
                 {/* Connect Button */}
                 <Button
-                  onClick={handleConnectTikTok}
+                  onClick={initiateTikTokConnect}
                   disabled={isConnecting}
                   className="w-full bg-gradient-to-r from-[#6C63FF] to-[#FF2E97] hover:from-[#5A52E6] hover:to-[#E61E87] text-white font-semibold py-4 rounded-2xl transition-all duration-300 mb-8"
                 >
@@ -94,6 +92,9 @@ export default function ConnectPage() {
                     </>
                   )}
                 </Button>
+                {tiktokError && (
+                  <div className="text-red-400 text-sm mt-2">{tiktokError}</div>
+                )}
 
                 {/* Loading Bar */}
                 {isConnecting && (

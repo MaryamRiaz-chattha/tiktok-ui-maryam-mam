@@ -29,7 +29,9 @@ function GoogleCallbackContent() {
         await handleGoogleCallback(code, state);
         setStatus("success");
         setMessage("Login successful! Redirecting...");
-        setTimeout(() => router.push("/dashboard"), 1500);
+        // Navigation is handled by handleGoogleCallback (it pushes the stored redirect
+        // or `/dashboard`). Avoid forcing another navigation here which can override
+        // the intended target (e.g. connect/tiktok). Keep this UI-only feedback.
       } catch (err) {
         console.error(err);
         setStatus("error");
@@ -68,7 +70,11 @@ function GoogleCallbackContent() {
 
 export default function GoogleCallbackPage() {
   return (
-    <Suspense fallback={<div className="text-white text-center mt-20">Loading callback...</div>}>
+    <Suspense
+      fallback={
+        <div className="text-white text-center mt-20">Loading callback...</div>
+      }
+    >
       <GoogleCallbackContent />
     </Suspense>
   );
