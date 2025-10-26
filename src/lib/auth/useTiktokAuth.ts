@@ -128,9 +128,44 @@ export default function useTikTokAuth() {
     }
   }, []);
 
+  const uploadVideo = useCallback(async (file: File, title: string) => {
+    const url = 'https://backend.postsiva.com/tiktok/post/upload';
+    const token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsImV4cCI6MTc2MjExMzc4N30.Ik_P9wf8TgSaP9QuppcFgumxs0RYBFkTyf-Cff7-Y5A';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'Authorization': token,
+                'Content-Type': 'multipart/form-data',
+            },
+            body: formData,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            console.log('Video uploaded successfully:', data);
+            return data;
+        } else {
+            console.error('Upload failed:', data.message);
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Error uploading video:', error);
+        throw error;
+    }
+  }, []);
+
+  // Export the uploadVideo function for use in other components
   return {
     ...state,
     initiateTikTokConnect,
     initiateTikTokTestUser,
+    uploadVideo,
   };
 }
