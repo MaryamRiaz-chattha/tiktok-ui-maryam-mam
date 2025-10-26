@@ -17,6 +17,7 @@ import { api } from './authApi'
 import { DEBUG_LOGS } from '@/lib/config/appConfig'
 import { STORAGE_KEYS } from './authConstants'
 import type { SignupData, LoginData, AuthResponse, SignupResponse } from './types/authTypes'
+import type { AxiosResponse, AuthenticatedFetchOptions } from './types/axiosTypes'
 import { authReducer, initialAuthState } from './Reducers/authReducer'
 
 export default function useAuth() {
@@ -286,9 +287,11 @@ export default function useAuth() {
     body?: unknown
     data?: unknown
     headers?: Record<string, string | undefined>
+    timeout?: number
+    withCredentials?: boolean
   }
 
-  const fetchWithAuth = useCallback(async (url: string, options: FetchOptions = {}) => {
+  const fetchWithAuth = useCallback(async (url: string, options: AuthenticatedFetchOptions = {}): Promise<AxiosResponse<unknown>> => {
     if (DEBUG_LOGS) console.log('🌐 Making authenticated request to:', url)
     
     const authHeaders = getAuthHeaders()
@@ -309,7 +312,15 @@ export default function useAuth() {
         url,
       })
       
-      return response
+      const customResponse: AxiosResponse<unknown> = {
+        data: response.data as unknown,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+        config: response.config,
+        request: response.request
+      }
+      return customResponse
     } catch (error: unknown) {
       if (DEBUG_LOGS) console.error('❌ Authenticated request failed:', error)
       

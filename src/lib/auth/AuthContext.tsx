@@ -24,7 +24,7 @@ interface AuthContextType extends AuthState {
   fetchWithAuth: (
     url: string,
     options?: AuthenticatedFetchOptions
-  ) => Promise<AxiosResponse>;
+  ) => Promise<AxiosResponse<unknown>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
