@@ -53,6 +53,9 @@ export default function useTikTokAuth() {
 
         const popup = window.open(authUrl, 'tiktok_oauth_popup', features);
 
+        // Store popup reference globally for monitoring
+        (window as any).tiktokPopup = popup;
+
         // Fallback: if popup is blocked, redirect current tab
         if (!popup || popup.closed || typeof popup.closed === 'undefined') {
           console.warn('Popup blocked; redirecting current tab to TikTok');

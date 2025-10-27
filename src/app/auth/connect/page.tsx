@@ -1,5 +1,12 @@
 "use client";
 
+// Extend Window interface for popup reference
+declare global {
+  interface Window {
+    tiktokPopup?: Window | null;
+  }
+}
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/Home-Content/Header";
@@ -29,29 +36,29 @@ export default function ConnectPage() {
   // Listen for TikTok auth success message from popup
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      console.log('🎵 Received message:', event.data);
+      console.log("🎵 Received message:", event.data);
       // Check if message is from TikTok auth popup
-      if (event.data?.type === 'tiktok_auth' && event.data?.success) {
-        console.log('🎵 TikTok auth successful, redirecting to dashboard');
-        router.push('/dashboard');
+      if (event.data?.type === "tiktok_auth" && event.data?.success) {
+        console.log("🎵 TikTok auth successful, redirecting to dashboard");
+        router.push("/dashboard");
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    
+    window.addEventListener("message", handleMessage);
+
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener("message", handleMessage);
     };
   }, [router]);
 
   // Fallback: Check if popup was closed manually and redirect if needed
   useEffect(() => {
     let popupCheckInterval: NodeJS.Timeout;
-    
+
     const checkPopupClosed = () => {
       // This will be set when initiateTikTokConnect is called
       if (window.tiktokPopup && window.tiktokPopup.closed) {
-        console.log('🎵 TikTok popup was closed, checking auth status...');
+        console.log("🎵 TikTok popup was closed, checking auth status...");
         // You could add a check here to verify if auth was successful
         // For now, we'll just clear the reference
         window.tiktokPopup = null;
@@ -162,7 +169,7 @@ export default function ConnectPage() {
                       If the popup doesn't redirect automatically:
                     </p>
                     <button
-                      onClick={() => router.push('/dashboard')}
+                      onClick={() => router.push("/dashboard")}
                       className="px-4 py-2 bg-[#6C63FF] hover:bg-[#5A52E6] text-white text-sm rounded-lg transition-colors"
                     >
                       Go to Dashboard
