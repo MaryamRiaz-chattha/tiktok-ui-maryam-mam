@@ -57,11 +57,13 @@ export default function TikTokCallbackPage() {
         );
 
         if (!response.ok) {
-          const data = await response.json().catch(() => ({})) as Partial<TikTokCallbackResponse>;
+          const data = (await response
+            .json()
+            .catch(() => ({}))) as Partial<TikTokCallbackResponse>;
           throw new Error(data.message || "TikTok authentication failed.");
         }
 
-        const data = await response.json() as TikTokCallbackResponse;
+        const data = (await response.json()) as TikTokCallbackResponse;
         console.log("✅ TikTok authentication successful:", data);
         setStatus("success");
 
@@ -86,7 +88,8 @@ export default function TikTokCallbackPage() {
         }
       } catch (err: unknown) {
         setStatus("error");
-        const errorMessage = err instanceof Error ? err.message : "TikTok authentication failed.";
+        const errorMessage =
+          err instanceof Error ? err.message : "TikTok authentication failed.";
         setError(errorMessage);
       }
     };
