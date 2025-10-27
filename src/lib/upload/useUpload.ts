@@ -8,24 +8,24 @@ interface UploadProviderProps {
     children: ReactNode;
 }
 
-export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
+export function UploadProvider({ children }: UploadProviderProps) {
     const [state, dispatch] = useReducer(uploadReducer, { 
         isLoading: false, 
         error: null, 
         success: false 
     });
 
-    const contextValue = {
+    const contextValue: UploadContextType = {
         state,
         dispatch
     };
 
-    return (
-        <UploadContext.Provider value={contextValue}>
-            {children}
-        </UploadContext.Provider>
+    return React.createElement(
+        UploadContext.Provider,
+        { value: contextValue },
+        children
     );
-};
+}
 
 export const useUpload = () => {
     const context = useContext(UploadContext);

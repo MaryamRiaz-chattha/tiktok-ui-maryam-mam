@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function TikTokCallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -16,8 +15,11 @@ export default function TikTokCallbackPage() {
     typeof window !== "undefined" && window.opener && window.opener !== window;
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
+    // Get search params from URL directly to avoid Suspense issues
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const state = urlParams.get("state");
+
     if (!code) {
       setStatus("error");
       setError("Missing TikTok authorization code.");
