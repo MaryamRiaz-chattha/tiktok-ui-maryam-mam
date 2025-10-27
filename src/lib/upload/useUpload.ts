@@ -1,4 +1,4 @@
-import { useReducer, createContext, useContext, ReactNode } from 'react';
+import React, { useReducer, createContext, useContext, ReactNode } from 'react';
 import uploadReducer from './Reducers/uploadReducer';
 import { UploadState, UploadContextType } from './types/uploadTypes';
 
@@ -9,10 +9,19 @@ interface UploadProviderProps {
 }
 
 export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
-    const [state, dispatch] = useReducer(uploadReducer, { isLoading: false, error: null, success: false });
+    const [state, dispatch] = useReducer(uploadReducer, { 
+        isLoading: false, 
+        error: null, 
+        success: false 
+    });
+
+    const contextValue = {
+        state,
+        dispatch
+    };
 
     return (
-        <UploadContext.Provider value={{ state, dispatch }}>
+        <UploadContext.Provider value={contextValue}>
             {children}
         </UploadContext.Provider>
     );
