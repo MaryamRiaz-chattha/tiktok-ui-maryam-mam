@@ -129,35 +129,56 @@ export default function useTikTokAuth() {
   }, []);
 
   const uploadVideo = useCallback(async (file: File, title: string) => {
-    const url = 'https://backend.postsiva.com/tiktok/post/upload';
-    const token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsImV4cCI6MTc2MjExMzc4N30.Ik_P9wf8TgSaP9QuppcFgumxs0RYBFkTyf-Cff7-Y5A';
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('title', title);
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
+    dispatch({ type: 'SET_SUCCESS', payload: false });
 
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json',
-                'Authorization': token,
-                'Content-Type': 'multipart/form-data',
-            },
-            body: formData,
-        });
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        throw new Error('You must be logged in to upload videos');
+      }
 
-        const data = await response.json();
-        if (data.success) {
-            console.log('Video uploaded successfully:', data);
-            return data;
-        } else {
-            console.error('Upload failed:', data.message);
-            throw new Error(data.message);
-        }
-    } catch (error) {
-        console.error('Error uploading video:', error);
-        throw error;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', title);
+
+      const response = await fetch(`${API_BASE_URL}/tiktok/post/upload`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: Failed to upload video`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('🎵 Video uploaded successfully:', data);
+        dispatch({ type: 'SET_SUCCESS', payload: true });
+        
+        // Redirect to dashboard after successful upload
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000); // Small delay to show success message
+        
+        return data;
+      } else {
+        throw new Error(data.message || 'Failed to upload video');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to upload video';
+      dispatch({ type: 'SET_ERROR', payload: message });
+      console.error('❌ Video upload error:', err);
+      throw err;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);
 
