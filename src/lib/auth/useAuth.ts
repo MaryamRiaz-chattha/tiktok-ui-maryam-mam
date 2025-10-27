@@ -30,9 +30,10 @@ export default function useAuth() {
     const itemsToRemove = [
       STORAGE_KEYS.AUTH_TOKEN,
       STORAGE_KEYS.USER_DATA,
-      STORAGE_KEYS.SESSION_ID,
-      STORAGE_KEYS.ACTIVE_USER_ID,
-      'user_id',
+      STORAGE_KEYS.USER_ID,
+      STORAGE_KEYS.GOOGLE_AUTH_REDIRECT,
+      STORAGE_KEYS.GEMINI_API_KEY_PREVIEW,
+      STORAGE_KEYS.HAS_GEMINI_KEY,
     ]
     
     itemsToRemove.forEach(item => {

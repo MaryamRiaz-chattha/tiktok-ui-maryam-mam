@@ -53,9 +53,7 @@ export default function ConnectPage() {
 
   // Fallback: Check if popup was closed manually and redirect if needed
   useEffect(() => {
-    let popupCheckInterval: NodeJS.Timeout;
-
-    const checkPopupClosed = () => {
+    const popupCheckInterval: NodeJS.Timeout = setInterval(() => {
       // This will be set when initiateTikTokConnect is called
       if (window.tiktokPopup && window.tiktokPopup.closed) {
         console.log("🎵 TikTok popup was closed, checking auth status...");
@@ -63,15 +61,10 @@ export default function ConnectPage() {
         // For now, we'll just clear the reference
         window.tiktokPopup = null;
       }
-    };
-
-    // Check every 2 seconds if popup is closed
-    popupCheckInterval = setInterval(checkPopupClosed, 2000);
+    }, 2000);
 
     return () => {
-      if (popupCheckInterval) {
-        clearInterval(popupCheckInterval);
-      }
+      clearInterval(popupCheckInterval);
     };
   }, []);
 
@@ -166,7 +159,7 @@ export default function ConnectPage() {
                 {isConnecting && (
                   <div className="text-center">
                     <p className="text-[#C5C5D2] text-xs mb-2">
-                      If the popup doesn't redirect automatically:
+                      If the popup doesn&apos;t redirect automatically:
                     </p>
                     <button
                       onClick={() => router.push("/dashboard")}

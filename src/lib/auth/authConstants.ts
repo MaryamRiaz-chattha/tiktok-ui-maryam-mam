@@ -3,6 +3,8 @@ export const STORAGE_KEYS = {
   USER_DATA: 'user_data',
   USER_ID: 'user_id',
   GOOGLE_AUTH_REDIRECT: 'google_auth_redirect',
+  GEMINI_API_KEY_PREVIEW: 'gemini_api_key_preview',
+  HAS_GEMINI_KEY: 'has_gemini_key',
 } as const;
 
 export const API_ENDPOINTS = {
