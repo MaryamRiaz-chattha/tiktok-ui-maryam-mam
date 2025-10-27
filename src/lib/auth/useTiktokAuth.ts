@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useReducer } from 'react';
-import { STORAGE_KEYS, API_BASE_URL } from './authConstants';
+import { STORAGE_KEYS, API_ENDPOINTS } from './authConstants';
 import { initialTikTokState, tiktokReducer } from './Reducers/tiktokReducer';
 import type { TikTokCreateTokenResponse, TikTokTestUserResponse } from './types/tiktokTypes';
 
@@ -20,7 +20,7 @@ export default function useTikTokAuth() {
         throw new Error('You must be logged in to connect TikTok');
       }
 
-      const response = await fetch(`${API_BASE_URL}/tiktok/create-token`, {
+      const response = await fetch(`${API_ENDPOINTS.BASE_URL}/tiktok/create-token`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',
@@ -89,7 +89,7 @@ export default function useTikTokAuth() {
         throw new Error('You must be logged in to add TikTok test user');
       }
 
-      const response = await fetch(`${API_BASE_URL}/tiktok/test-user`, {
+      const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.TIKTOK_TEST_USER}`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',
@@ -128,65 +128,9 @@ export default function useTikTokAuth() {
     }
   }, []);
 
-  const uploadVideo = useCallback(async (file: File, title: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    dispatch({ type: 'SET_ERROR', payload: null });
-    dispatch({ type: 'SET_SUCCESS', payload: false });
-
-    try {
-      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-      if (!token) {
-        throw new Error('You must be logged in to upload videos');
-      }
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('title', title);
-
-      const response = await fetch(`${API_BASE_URL}/tiktok/post/upload`, {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: Failed to upload video`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log('🎵 Video uploaded successfully:', data);
-        dispatch({ type: 'SET_SUCCESS', payload: true });
-        
-        // Redirect to dashboard after successful upload
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000); // Small delay to show success message
-        
-        return data;
-      } else {
-        throw new Error(data.message || 'Failed to upload video');
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to upload video';
-      dispatch({ type: 'SET_ERROR', payload: message });
-      console.error('❌ Video upload error:', err);
-      throw err;
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  }, []);
-
-  // Export the uploadVideo function for use in other components
   return {
     ...state,
     initiateTikTokConnect,
     initiateTikTokTestUser,
-    uploadVideo,
   };
 }

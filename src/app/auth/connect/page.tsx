@@ -26,6 +26,48 @@ export default function ConnectPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
+  // Listen for TikTok auth success message from popup
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      console.log('🎵 Received message:', event.data);
+      // Check if message is from TikTok auth popup
+      if (event.data?.type === 'tiktok_auth' && event.data?.success) {
+        console.log('🎵 TikTok auth successful, redirecting to dashboard');
+        router.push('/dashboard');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [router]);
+
+  // Fallback: Check if popup was closed manually and redirect if needed
+  useEffect(() => {
+    let popupCheckInterval: NodeJS.Timeout;
+    
+    const checkPopupClosed = () => {
+      // This will be set when initiateTikTokConnect is called
+      if (window.tiktokPopup && window.tiktokPopup.closed) {
+        console.log('🎵 TikTok popup was closed, checking auth status...');
+        // You could add a check here to verify if auth was successful
+        // For now, we'll just clear the reference
+        window.tiktokPopup = null;
+      }
+    };
+
+    // Check every 2 seconds if popup is closed
+    popupCheckInterval = setInterval(checkPopupClosed, 2000);
+
+    return () => {
+      if (popupCheckInterval) {
+        clearInterval(popupCheckInterval);
+      }
+    };
+  }, []);
+
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -107,11 +149,26 @@ export default function ConnectPage() {
                 )}
 
                 {/* Info Text */}
-                <p className="text-[#C5C5D2] text-sm">
+                <p className="text-[#C5C5D2] text-sm mb-4">
                   {isConnecting
                     ? "Please wait while we connect your TikTok account..."
                     : "Connect your TikTok account to start automating your posts"}
                 </p>
+
+                {/* Manual redirect fallback */}
+                {isConnecting && (
+                  <div className="text-center">
+                    <p className="text-[#C5C5D2] text-xs mb-2">
+                      If the popup doesn't redirect automatically:
+                    </p>
+                    <button
+                      onClick={() => router.push('/dashboard')}
+                      className="px-4 py-2 bg-[#6C63FF] hover:bg-[#5A52E6] text-white text-sm rounded-lg transition-colors"
+                    >
+                      Go to Dashboard
+                    </button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

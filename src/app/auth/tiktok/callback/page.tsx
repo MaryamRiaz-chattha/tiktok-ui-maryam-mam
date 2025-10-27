@@ -81,24 +81,37 @@ export default function TikTokCallbackPage() {
         if (isPopup) {
           try {
             // Try postMessage to parent (more robust cross-origin)
-            const payload = { type: "tiktok_auth", success: true };
-            // Use '*' if you don't know origin (safer to specify if known)
+            const payload = { type: "tiktok_auth", success: true, data };
+            console.log(
+              "🎵 Sending success message to parent window:",
+              payload
+            );
+
+            // Send message to parent window
             window.opener.postMessage(payload, "*");
-            // then close popup
-            window.close();
+
+            // Small delay to ensure message is sent before closing
+            setTimeout(() => {
+              window.close();
+            }, 100);
           } catch (e) {
+            console.error("❌ Failed to send message to parent:", e);
             // fallback: try to change parent href (may be blocked by cross-origin)
             try {
               if (window.opener) {
                 window.opener.location.href = "/dashboard";
+                window.close();
+              } else {
+                router.push("/dashboard");
               }
-              window.close();
             } catch (e2) {
+              console.error("❌ Failed to redirect parent window:", e2);
               // last resort: just redirect self
               router.push("/dashboard");
             }
           }
         } else {
+          console.log("🎵 Not in popup, redirecting directly to dashboard");
           router.push("/dashboard");
         }
       } catch (err: unknown) {
