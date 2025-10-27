@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Type for TikTok API response
 interface TikTokCallbackResponse {
   success: boolean;
   message?: string;
@@ -24,7 +23,6 @@ export default function TikTokCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get("code");
         const state = urlParams.get("state");
@@ -35,7 +33,6 @@ export default function TikTokCallbackPage() {
           return;
         }
 
-        // Get auth token
         const token = localStorage.getItem("auth_token");
         if (!token) {
           setStatus("error");
@@ -43,7 +40,7 @@ export default function TikTokCallbackPage() {
           return;
         }
 
-        // Call backend API
+        // NOTE: use try/catch around fetch network errors
         const response = await fetch(
           "https://backend.postsiva.com/tiktok/callback",
           {
@@ -53,43 +50,62 @@ export default function TikTokCallbackPage() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ code, state }),
+            // credentials: 'include' // enable if backend uses cookies
           }
         );
 
-        if (!response.ok) {
-          const data = (await response
-            .json()
-            .catch(() => ({}))) as Partial<TikTokCallbackResponse>;
-          throw new Error(data.message || "TikTok authentication failed.");
+        // Read body once (text then try parse) to avoid double consumption
+        const text = await response.text();
+        let parsed: Partial<TikTokCallbackResponse> = {};
+        try {
+          parsed = text ? JSON.parse(text) : {};
+        } catch (e) {
+          // response was not JSON
+          parsed = { message: text || undefined };
         }
 
-        const data = (await response.json()) as TikTokCallbackResponse;
+        if (!response.ok) {
+          // backend returned error; throw with message
+          const msg =
+            parsed?.message ||
+            `TikTok authentication failed (status ${response.status})`;
+          throw new Error(msg);
+        }
+
+        const data = parsed as TikTokCallbackResponse;
         console.log("✅ TikTok authentication successful:", data);
         setStatus("success");
 
-        // Check if we're in a popup window
-        const isPopup = window.opener && window.opener !== window;
+        const isPopup = !!(window.opener && window.opener !== window);
 
         if (isPopup) {
-          // If we're in a popup, close it and redirect the parent window
-          setTimeout(() => {
-            if (window.opener) {
-              window.opener.location.href = "/dashboard";
+          try {
+            // Try postMessage to parent (more robust cross-origin)
+            const payload = { type: "tiktok_auth", success: true };
+            // Use '*' if you don't know origin (safer to specify if known)
+            window.opener.postMessage(payload, "*");
+            // then close popup
+            window.close();
+          } catch (e) {
+            // fallback: try to change parent href (may be blocked by cross-origin)
+            try {
+              if (window.opener) {
+                window.opener.location.href = "/dashboard";
+              }
               window.close();
-            } else {
+            } catch (e2) {
+              // last resort: just redirect self
               router.push("/dashboard");
             }
-          }, 2000);
+          }
         } else {
-          // If we're not in a popup, redirect normally
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 2000);
+          router.push("/dashboard");
         }
       } catch (err: unknown) {
         setStatus("error");
         const errorMessage =
           err instanceof Error ? err.message : "TikTok authentication failed.";
+        console.error("TikTok callback error:", err);
         setError(errorMessage);
       }
     };
@@ -99,8 +115,8 @@ export default function TikTokCallbackPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A012A] text-white">
-        <div className="mb-4 animate-spin border-4 border-[#6C63FF] border-t-transparent rounded-full w-12 h-12"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[hashtag#0A012A] text-white">
+        <div className="mb-4 animate-spin border-4 border-[hashtag#6C63FF] border-t-transparent rounded-full w-12 h-12"></div>
         <p>Completing TikTok authentication...</p>
       </div>
     );
@@ -108,7 +124,7 @@ export default function TikTokCallbackPage() {
 
   if (status === "success") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A012A] text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[hashtag#0A012A] text-white">
         <div className="mb-4 text-6xl">🎉</div>
         <h2 className="text-2xl font-bold mb-2 text-green-400">
           TikTok Connected Successfully!
@@ -131,7 +147,7 @@ export default function TikTokCallbackPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A012A] text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[hashtag#0A012A] text-white">
       <div className="mb-4 text-6xl">❌</div>
       <h2 className="text-2xl font-bold mb-2 text-red-400">
         TikTok Connection Failed
@@ -145,7 +161,7 @@ export default function TikTokCallbackPage() {
           Try Again
         </button>
         <button
-          className="px-6 py-2 bg-[#6C63FF] hover:bg-[#5A52E6] rounded-lg text-white font-medium transition-colors"
+          className="px-6 py-2 bg-[hashtag#6C63FF] hover:bg-[hashtag#5A52E6] rounded-lg text-white font-medium transition-colors"
           onClick={() => router.push("/dashboard")}
         >
           Go to Dashboard
